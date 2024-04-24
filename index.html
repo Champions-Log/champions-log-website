@@ -13,7 +13,17 @@
         <h2 class="text-center py-4">Champions Log</h2>
 
         <div class="row justify-content-center">
-            A player lookup feature will be available here soon :)
+            <div class="col-md-6">
+                <form id="search-form" class="p-3">
+                    <div class="input-group">
+                        <input id="form-display-name-input" name="displayName" type="text" class="form-control"
+                               maxlength="12" placeholder="Player name" aria-label="Player name" required>
+                        <button type="submit" class="btn btn-sm btn-primary px-4">Search</button>
+                    </div>
+                </form>
+                <div id="log-entries-container">
+                </div>
+            </div>
         </div>
 
         <h3 class="text-center py-5">Tracked Activities</h3>
@@ -37,5 +47,47 @@
         </div>
     </main>
 </div>
+<script>
+    const form = document.getElementById('search-form')
+    form.addEventListener('submit', onSubmit)
+
+    async function onSubmit(event) {
+        event.preventDefault()
+
+        const data = new FormData(event.target)
+        const displayName = data.get('displayName');
+        const button = event.submitter
+
+        button.classList.add('disabled')
+
+        const response = await fetch(`https://api.championslog.net/log-entries?name=${displayName}`);
+
+        if (response.ok) {
+            const entries = await response.json();
+            let entriesContainer = document.getElementById("log-entries-container");
+
+            while (entriesContainer.firstChild) {
+                entriesContainer.removeChild(entriesContainer.lastChild);
+            }
+            const entriesTable = document.createElement('table');
+            entriesTable.classList.add('table', 'table-bordered')
+
+            for (const entry of entries) {
+                let row = entriesTable.insertRow();
+
+                if (entry.unique) {
+                    row.classList.add('table-info')
+                }
+                let cell = row.insertCell();
+                cell.innerText = entry.message
+            }
+            entriesContainer.appendChild(entriesTable)
+        } else {
+            const input = document.getElementById('form-display-name-input');
+            input.classList.add('border-danger')
+        }
+        button.classList.remove('disabled')
+    }
+</script>
 </body>
 </html>
